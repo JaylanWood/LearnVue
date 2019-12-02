@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>LearnVue</title>
+
+</head>
+
+<body>
+    <div id="app">
+        <div>
+            书名：《<span id="name">__name__</span>》
+            数量：<span id="number">__number__</span>
+        </div>
+        <div>
+            <button id="addOne">加1</button>
+            <button id="minusOne">减1</button>
+            <button id="reset">归零</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script>
+        // axios拦截响应
+        axios.interceptors.response.use(function (response) {
+            let {
+                config: {
+                    method,
+                    url,
+                    data // 这里是请求的data
+                }
+            } = response
+            if (url === '/books/1' && method === 'get') {
+                response.data = {
+                    'name': '演员的自我修养',
+                    'number': 2,
+                    'id': 1
+                }
+            }
+            return response
+        })
+
+        // axios的AJAX请求
+        axios.get('/books/1')
+            .then(({
+                data
+            }) => {
+                let originalHtml = $('#app').html()
+                let newHtml = originalHtml.replace('__name__', data.name)
+                    .replace('__number__', data.number)
+                $('#app').html(newHtml)
+            })
+
+        // jQuery的DOM操作
+        /* 
+        事件委托
+        上面的AJAX请求后把__name__和__number__的html给替换掉了，
+        所以下面要把点击事件绑定给$('#app')，由$('#app')冒泡给#addOne、#minusOne、#reset。
+        */
+        $('#app').on('click', '#addOne', function () {
+            var oldNumber = $('#number').text()
+            var newNumber = oldNumber - 0 + 1
+            $('#number').text(newNumber)
+        })
+        $('#app').on('click', '#minusOne', function () {
+            var oldNumber = $('#number').text()
+            var newNumber = oldNumber - 0 - 1
+            $('#number').text(newNumber)
+        })
+        $('#app').on('click', '#reset', function () {
+            $('#number').text(0)
+        })
+    </script>
+</body>
+
+</html>
