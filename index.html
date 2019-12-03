@@ -12,7 +12,7 @@
 <body>
     <div id="app">
         <div>
-            书名：《<span id="name">__name__</span>》
+            书名：《__name__》
             数量：<span id="number">__number__</span>
         </div>
         <div>
@@ -26,54 +26,65 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
     <script>
+        let book = {
+            name: '演员的自我修养',
+            number: 2,
+            id: 1
+        }
         // axios拦截响应
         axios.interceptors.response.use(function (response) {
             let {
                 config: {
                     method,
                     url,
-                    data // 这里是请求的data
+                    data
                 }
             } = response
+
             if (url === '/books/1' && method === 'get') {
-                response.data = {
-                    'name': '演员的自我修养',
-                    'number': 2,
-                    'id': 1
-                }
+                response.data = book
+            } else if (url === '/books/2') {
+                Object.assign(book, data)
+                response.data = book
             }
             return response
         })
 
-        // axios的AJAX请求
-        axios.get('/books/1')
-            .then(({
-                data
-            }) => {
-                let originalHtml = $('#app').html()
-                let newHtml = originalHtml.replace('__name__', data.name)
-                    .replace('__number__', data.number)
-                $('#app').html(newHtml)
-            })
+        /* -----上门是假的后台----- */
 
-        // jQuery的DOM操作
-        /* 
-        事件委托
-        上面的AJAX请求后把__name__和__number__的html给替换掉了，
-        所以下面要把点击事件绑定给$('#app')，由$('#app')冒泡给#addOne、#minusOne、#reset。
-        */
+        // axios的AJAX请求——页面加载时，读取服务器data
+        axios.get('/books/1').then(({
+            data
+        }) => {
+            let originalHtml = $('#app').html()
+            let newHtml = originalHtml.replace('__name__', data.name).replace('__number__', data.number)
+            $('#app').html(newHtml)
+        })
+        // DOM操作+axios发请求——修改服务器data
         $('#app').on('click', '#addOne', function () {
             var oldNumber = $('#number').text()
             var newNumber = oldNumber - 0 + 1
-            $('#number').text(newNumber)
+            axios.get('/books/2', {
+                number: newNumber
+            }).then(() => {
+                $('#number').text(newNumber)
+            })
         })
         $('#app').on('click', '#minusOne', function () {
             var oldNumber = $('#number').text()
             var newNumber = oldNumber - 0 - 1
-            $('#number').text(newNumber)
+            axios.get('/books/2', {
+                number: newNumber
+            }).then(() => {
+                $('#number').text(newNumber)
+            })
         })
         $('#app').on('click', '#reset', function () {
-            $('#number').text(0)
+            axios.get('/books/2', {
+                number: 0
+            }).then(() => {
+                $('#number').text(0)
+            })
         })
     </script>
 </body>
